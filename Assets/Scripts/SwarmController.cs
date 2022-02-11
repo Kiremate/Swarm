@@ -21,7 +21,8 @@ public class SwarmController : MonoBehaviour
 
     Vector3 select_boxOrigin;
     Vector3 select_boxEnd;
-
+    bool unitSelection = false;
+    Rect selectionWindow = new Rect();
     private void Reset()
     {
         GetUnitsFromScene();
@@ -84,6 +85,7 @@ public class SwarmController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
+            unitSelection = true;
             RaycastHit hit;
             
             Ray ray = currentCamera.ScreenPointToRay(Input.mousePosition);
@@ -94,7 +96,7 @@ public class SwarmController : MonoBehaviour
                 UnitController controller;
                 hit.transform.TryGetComponent(out controller);
                 // Select Origin of the box
-                select_boxOrigin = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                select_boxOrigin = Input.mousePosition;
                 if (controller && controller.CurrentTeam == swarmTeam)
                 {
                     DeselectAllUnits();
@@ -103,26 +105,46 @@ public class SwarmController : MonoBehaviour
                 }
             }
 
+        }
 
+        if (unitSelection)
+        {
+            select_boxEnd = Input.mousePosition;
+            var xInc = (int)select_boxEnd.x - select_boxOrigin.x;
+            var yInc = (int)select_boxEnd.y - select_boxOrigin.y;
+            if(xInc < 0)
+            {
+                selectionWindow.x = select_boxOrigin.x + xInc;
+            }
+
+            if(yInc  > 0)
+            {
+                selectionWindow.y = select_boxOrigin.y + yInc;
+            }
+
+            selectionWindow.width = Math.Abs(xInc);
+            selectionWindow.height = Math.Abs(yInc);
+
+
+            SelectInArea();
 
         }
 
+
         if (Input.GetMouseButtonUp(0))
         {
+            unitSelection = false;
             RaycastHit hit;
 
             Ray ray = currentCamera.ScreenPointToRay(Input.mousePosition);
 
             Debug.Log("Posicion Final ");
 
-            select_boxEnd = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            select_boxEnd = Input.mousePosition;
 
         }
 
-        void SelectInArea()
-        {
-
-        }
+    
 
         if (Input.GetMouseButtonDown(1))
         {
@@ -144,4 +166,43 @@ public class SwarmController : MonoBehaviour
         }
         
     }
+    private void SelectInArea()
+    {
+        foreach (UnitController unit in units)
+        {
+            // check if is inside the region
+            if(unit.screenPosition.x >= selectionWindow.x && 
+                unit.screenPosition.x <= (selectionWindow.x + selectionWindow.width) &&
+                    unit.screenPosition.y <= selectionWindow.y &&
+                    unit.screenPosition.y >= (selectionWindow.y + selectionWindow.height)){
+                unit.SetSelected();
+            }
+            else
+                unit.SetDeselected();
+
+            //if (selectionWindow.Contains(unit.screenPosition, true))
+            //    unit.SetSelected();
+            //else
+            //    unit.SetDeselected();
+        }
+    }
+    private void OnGUI()
+    {
+        // check this https://forum.unity.com/threads/defining-the-bounds-for-a-multi-gameobject-selection.144850/
+        if (unitSelection)
+        {
+            Texture2D texture = new Texture2D(1, 1);
+            texture.SetPixel(0, 0, new Color(0, 0, 255, 0.08f));
+            texture.Apply();
+            GUI.skin.box.normal.background = texture;
+            GUI.Box(new Rect(
+                selectionWindow.x,
+                Screen.height - selectionWindow.y,
+                selectionWindow.width,
+                selectionWindow.height
+            ), GUIContent.none);
+        }
+    }
+
+
 }

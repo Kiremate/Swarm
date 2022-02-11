@@ -17,6 +17,7 @@ public class UnitController : MonoBehaviour
 
     private NavMeshAgent agent;
 
+    public Vector3 screenPosition;
 
     public Team CurrentTeam
     {
@@ -38,7 +39,7 @@ set => currentTeam = value;
     // Update is called once per frame
     void Update()
     {
-
+        this.screenPosition = Camera.main.WorldToScreenPoint(transform.position);
     }
 
     public void SetSelected()

@@ -168,14 +168,17 @@ public class SwarmController : MonoBehaviour
     }
     private void SelectInArea()
     {
+        DeselectAllUnits();
+
         foreach (UnitController unit in units)
         {
             // check if is inside the region
             if(unit.screenPosition.x >= selectionWindow.x && 
                 unit.screenPosition.x <= (selectionWindow.x + selectionWindow.width) &&
                     unit.screenPosition.y <= selectionWindow.y &&
-                    unit.screenPosition.y >= (selectionWindow.y + selectionWindow.height)){
+                    unit.screenPosition.y >= (selectionWindow.y - selectionWindow.height)){
                 unit.SetSelected();
+                selectedUnits.Add(unit);
             }
             else
                 unit.SetDeselected();
